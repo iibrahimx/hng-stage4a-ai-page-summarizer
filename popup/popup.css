@@ -1,0 +1,265 @@
+/* === Reset & Base Styles === */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 400px;
+  min-height: 300px;
+  max-height: 600px;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1f2937;
+  background-color: #0f172a;
+  overflow-y: auto;
+}
+
+/* Container */
+.container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header */
+.header {
+  border-bottom: 1px solid #334155;
+  padding-bottom: 14px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.page-title {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+  line-height: 1.4;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background-color: #818cf8;
+  color: #0f172a;
+  flex: 1;
+  font-weight: 600;
+  box-shadow:
+    0 1px 3px rgba(129, 140, 248, 0.3),
+    0 1px 2px rgba(129, 140, 248, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: #6366f1;
+  box-shadow:
+    0 4px 6px rgba(129, 140, 248, 0.25),
+    0 2px 4px rgba(129, 140, 248, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  background-color: #4f46e5;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(129, 140, 248, 0.2);
+}
+
+.btn-primary:disabled {
+  background-color: #3730a3;
+  color: #818cf8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+.btn-secondary {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+}
+
+.btn-secondary:hover {
+  background-color: #334155;
+  border-color: #475569;
+}
+
+.btn-secondary:active {
+  background-color: #1e293b;
+  transform: scale(0.97);
+}
+
+/* Spinner */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(15, 23, 42, 0.3);
+  border-top-color: #0f172a;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+/* Reading Time */
+.reading-time {
+  font-size: 12px;
+  font-weight: 500;
+  color: #818cf8;
+  background-color: rgba(129, 140, 248, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  display: inline-block;
+  align-self: flex-start;
+  border: 1px solid rgba(129, 140, 248, 0.2);
+  margin-top: 12px;
+}
+
+.reading-time::before {
+  content: "⏱ ";
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+/* Summary Output */
+.summary-container {
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 6px;
+  background-color: #1e293b;
+  border-radius: 8px;
+  padding: 14px;
+  border: 1px solid #334155;
+  margin-top: 12px;
+}
+
+.summary-output {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #e2e8f0;
+}
+
+.summary-output ul,
+.summary-output ol {
+  padding-left: 20px;
+  margin: 10px 0;
+}
+
+.summary-output li {
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+.summary-output li::marker {
+  color: #818cf8;
+}
+
+.summary-output h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #a5b4fc;
+  margin-top: 18px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #334155;
+}
+
+.summary-output strong {
+  color: #f1f5f9;
+}
+
+/* Error Container */
+.error-container {
+  background-color: #7f1d1d;
+  border: 1px solid #991b1b;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.error-message {
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.error-message::before {
+  content: "⚠️ ";
+}
+
+/* Scrollbar Styling */
+.summary-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.summary-container::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.summary-container::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 3px;
+}
+
+.summary-container::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Empty State */
+.summary-output:empty::after {
+  content: "Your summary will appear here...";
+  color: #64748b;
+  font-style: italic;
+  font-size: 13px;
+}
