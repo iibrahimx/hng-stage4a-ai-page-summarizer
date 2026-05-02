@@ -225,6 +225,7 @@ body {
   border: 1px solid #991b1b;
   border-radius: 8px;
   padding: 14px;
+  margin-top: 12px;
 }
 
 .error-message {
