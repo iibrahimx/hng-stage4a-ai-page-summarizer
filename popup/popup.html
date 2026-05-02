@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Page Summarizer</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1 class="title">AI Page Summarizer</h1>
+        <p id="pageTitle" class="page-title">Loading page title...</p>
+      </header>
+
+      <main class="main">
+        <div class="controls">
+          <button id="summarizeBtn" class="btn btn-primary">
+            <span id="btnText">Summarize Page</span>
+            <span
+              id="btnSpinner"
+              class="spinner hidden"
+              aria-hidden="true"
+            ></span>
+          </button>
+
+          <button id="clearBtn" class="btn btn-secondary">Clear</button>
+        </div>
+
+        <div
+          id="readingTime"
+          class="reading-time hidden"
+          aria-live="polite"
+        ></div>
+
+        <div id="summaryContainer" class="summary-container" aria-live="polite">
+          <div id="summaryOutput" class="summary-output"></div>
+        </div>
+
+        <div id="errorContainer" class="error-container hidden" role="alert">
+          <p id="errorMessage" class="error-message"></p>
+        </div>
+      </main>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
