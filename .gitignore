@@ -1,0 +1,21 @@
+# API Keys and Environment Variables
+.env
+.env.local
+.env.*.local
+config.js
+secrets.js
+
+# Dependencies
+node_modules/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build files
+dist/
+build/
