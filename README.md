@@ -46,8 +46,8 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/iibrahimx/hng-stage4-ai-page-summarizer.git
-   cd hng-stage4-ai-page-summarizer
+   git clone https://github.com/iibrahimx/hng-stage4a-ai-page-summarizer.git
+   cd hng-stage4a-ai-page-summarizer
    ```
 
    Or download as ZIP and extract to a folder.
@@ -60,7 +60,7 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 3. **Load the extension**
 
 - Click **Load unpacked**
-- Select the project folder (`hng-stage4-ai-page-summarizer`)
+- Select the project folder (`hng-stage4a-ai-page-summarizer`)
 - The extension icon should appear in your toolbar
 
 4. **Pin the extension (optional)**
@@ -88,7 +88,7 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 ## Project Structure
 
 ```text
-hng-stage4-ai-page-summarizer/
+hng-stage4a-ai-page-summarizer/
 ├── manifest.json          # Extension configuration (Manifest V3)
 ├── popup/
 │   ├── popup.html         # Popup UI structure
