@@ -1,9 +1,12 @@
 // === CONFIGURATION ===
-const API_URL =
+const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+const GROQ_MODEL = "llama-3.1-8b-instant";
 
 const STORAGE_KEYS = {
   API_KEY: "api_key",
+  GROQ_API_KEY: "groq_api_key",
   SETTINGS: "user_settings",
 };
 
@@ -12,13 +15,18 @@ const DEFAULT_SETTINGS = {
   tone: "concise",
 };
 
-// === GET API KEY ===
+// === GET API KEYS ===
 async function getApiKey() {
   var result = await chrome.storage.local.get([STORAGE_KEYS.API_KEY]);
   return result[STORAGE_KEYS.API_KEY] || null;
 }
 
-// === BUILD PROMPT ===
+async function getGroqApiKey() {
+  var result = await chrome.storage.local.get([STORAGE_KEYS.GROQ_API_KEY]);
+  return result[STORAGE_KEYS.GROQ_API_KEY] || null;
+}
+
+// === BUILD PROMPT (shared by both APIs) ===
 function buildPrompt(content, settings) {
   var lengthGuide = {
     brief: "exactly 3 bullet points",
@@ -69,23 +77,19 @@ function buildPrompt(content, settings) {
   );
 }
 
-// === CALL API ===
-async function callAPI(apiKey, content, settings) {
+// === CALL GEMINI API ===
+async function callGeminiAPI(apiKey, content, settings) {
   var prompt = buildPrompt(content, settings);
 
   var requestBody = {
-    contents: [
-      {
-        parts: [{ text: prompt }],
-      },
-    ],
+    contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.3,
       maxOutputTokens: 1500,
     },
   };
 
-  var response = await fetch(API_URL + "?key=" + apiKey, {
+  var response = await fetch(GEMINI_API_URL + "?key=" + apiKey, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(requestBody),
@@ -94,7 +98,7 @@ async function callAPI(apiKey, content, settings) {
   if (!response.ok) {
     var errorData = await response.json();
     throw new Error(
-      errorData.error?.message || "API error: " + response.status,
+      errorData.error?.message || "Gemini API error: " + response.status,
     );
   }
 
@@ -102,20 +106,64 @@ async function callAPI(apiKey, content, settings) {
   return data.candidates[0].content.parts[0].text;
 }
 
-// === MAIN HANDLER ===
-async function handleSummarization(tabId) {
-  var apiKey = await getApiKey();
+// === CALL GROQ API (fallback) ===
+async function callGroqAPI(apiKey, content, settings) {
+  var prompt = buildPrompt(content, settings);
 
-  if (!apiKey) {
+  var requestBody = {
+    model: GROQ_MODEL,
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a professional content summarizer. Always respond with clean HTML. Never include markdown formatting.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    temperature: 0.3,
+    max_tokens: 1500,
+  };
+
+  var response = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + apiKey,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    var errorData = await response.json();
+    throw new Error(
+      errorData.error?.message || "Groq API error: " + response.status,
+    );
+  }
+
+  var data = await response.json();
+  return data.choices[0].message.content;
+}
+
+// === MAIN HANDLER WITH FALLBACK ===
+async function handleSummarization(tabId) {
+  var geminiKey = await getApiKey();
+  var groqKey = await getGroqApiKey();
+
+  // Check if at least one API key is available
+  if (!geminiKey && !groqKey) {
     return {
       error:
-        "No API key configured. Please add your Gemini API key in Settings.",
+        "No API key configured. Please add a Gemini or Groq API key in Settings.",
     };
   }
 
   var settingsResult = await chrome.storage.local.get([STORAGE_KEYS.SETTINGS]);
   var settings = settingsResult[STORAGE_KEYS.SETTINGS] || DEFAULT_SETTINGS;
 
+  // Get page content
   var pageData;
   try {
     var response = await chrome.tabs.sendMessage(tabId, {
@@ -138,15 +186,51 @@ async function handleSummarization(tabId) {
     return { error: "Not enough content found on this page to summarize." };
   }
 
-  try {
-    var summary = await callAPI(apiKey, pageData.content, settings);
-    return {
-      summary: summary,
-      readingTime: pageData.readingTime,
-    };
-  } catch (error) {
-    return { error: "AI API error: " + error.message };
+  // Try Gemini first, fallback to Groq
+  var summary;
+  var usedFallback = false;
+
+  if (geminiKey) {
+    try {
+      summary = await callGeminiAPI(geminiKey, pageData.content, settings);
+    } catch (geminiError) {
+      // Gemini failed, try Groq if available
+      if (groqKey) {
+        try {
+          summary = await callGroqAPI(groqKey, pageData.content, settings);
+          usedFallback = true;
+        } catch (groqError) {
+          return {
+            error:
+              "Both AI providers failed. Gemini: " +
+              geminiError.message +
+              " | Groq: " +
+              groqError.message,
+          };
+        }
+      } else {
+        return {
+          error:
+            "Gemini API error: " +
+            geminiError.message +
+            ". No fallback API key configured.",
+        };
+      }
+    }
+  } else if (groqKey) {
+    // Only Groq is configured
+    try {
+      summary = await callGroqAPI(groqKey, pageData.content, settings);
+    } catch (groqError) {
+      return { error: "Groq API error: " + groqError.message };
+    }
   }
+
+  return {
+    summary: summary,
+    readingTime: pageData.readingTime,
+    usedFallback: usedFallback,
+  };
 }
 
 // === MESSAGE LISTENER ===

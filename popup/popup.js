@@ -120,6 +120,11 @@ const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const settingsMessage = document.getElementById("settingsMessage");
 
+const groqApiKeyInput = document.getElementById("groqApiKeyInput");
+const toggleGroqVisibilityBtn = document.getElementById(
+  "toggleGroqVisibilityBtn",
+);
+
 // Toggle settings panel
 settingsToggle.addEventListener("click", () => {
   const isExpanded = settingsToggle.getAttribute("aria-expanded") === "true";
@@ -142,12 +147,26 @@ toggleVisibilityBtn.addEventListener("click", () => {
   toggleVisibilityBtn.textContent = type === "password" ? "👁️" : "🙈";
 });
 
+toggleGroqVisibilityBtn.addEventListener("click", () => {
+  const type = groqApiKeyInput.type === "password" ? "text" : "password";
+  groqApiKeyInput.type = type;
+  toggleGroqVisibilityBtn.textContent = type === "password" ? "👁️" : "🙈";
+});
+
 // Load saved settings
 async function loadSettings() {
-  const result = await chrome.storage.local.get(["api_key", "user_settings"]);
+  var result = await chrome.storage.local.get([
+    "api_key",
+    "groq_api_key",
+    "user_settings",
+  ]);
 
   if (result.api_key) {
     apiKeyInput.value = result.api_key;
+  }
+
+  if (result.groq_api_key) {
+    groqApiKeyInput.value = result.groq_api_key;
   }
 
   if (result.user_settings) {
@@ -158,16 +177,21 @@ async function loadSettings() {
 
 // Save settings
 saveSettingsBtn.addEventListener("click", async () => {
-  const apiKey = apiKeyInput.value.trim();
+  var apiKey = apiKeyInput.value.trim();
+  var groqKey = groqApiKeyInput.value.trim();
 
-  if (!apiKey) {
-    showSettingsMessage("Please enter an API key", "error");
+  if (!apiKey && !groqKey) {
+    showSettingsMessage(
+      "Please enter at least one API key (Gemini or Groq)",
+      "error",
+    );
     return;
   }
 
   try {
     await chrome.storage.local.set({
       api_key: apiKey,
+      groq_api_key: groqKey,
       user_settings: {
         summaryLength: summaryLength.value,
         tone: summaryTone.value,
@@ -183,9 +207,9 @@ saveSettingsBtn.addEventListener("click", async () => {
 clearCacheBtn.addEventListener("click", async () => {
   try {
     await chrome.storage.local.clear();
-    // Re-save settings after clearing
     await chrome.storage.local.set({
       api_key: apiKeyInput.value.trim(),
+      groq_api_key: groqApiKeyInput.value.trim(),
       user_settings: {
         summaryLength: summaryLength.value,
         tone: summaryTone.value,
