@@ -1,8 +1,6 @@
-// AI API Configuration
-const AI_PROVIDER = "gemini";
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+// === CONFIGURATION ===
+const API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 
 const STORAGE_KEYS = {
   API_KEY: "api_key",
@@ -14,204 +12,120 @@ const DEFAULT_SETTINGS = {
   tone: "concise",
 };
 
-// Test mode - set to true to test without real API calls
-const TEST_MODE = true;
-
-function generateMockSummary(content, settings) {
-  const wordCount = content.split(/\s+/).length;
-  const points =
-    settings.summaryLength === "brief"
-      ? 3
-      : settings.summaryLength === "detailed"
-        ? 8
-        : 5;
-
-  // Create realistic-looking summary
-  const sentences = content
-    .split(/[.!?]+/)
-    .filter((s) => s.trim().length > 30)
-    .slice(0, 2);
-
-  let html = "<h3>Key Insights</h3><ul>";
-  if (sentences.length > 0) {
-    sentences.forEach((sentence) => {
-      html += `<li><strong>Key Point:</strong> ${sentence.trim().substring(0, 150)}...</li>`;
-    });
-  } else {
-    html +=
-      "<li>This page contains important information worth reviewing in detail.</li>";
-  }
-  html += "</ul>";
-
-  html += "<h3>Summary</h3><ul>";
-  for (let i = 0; i < points; i++) {
-    const insights = [
-      "The content presents key information in a structured format that readers can easily follow.",
-      "Multiple perspectives are covered, giving readers a comprehensive understanding of the topic.",
-      "Supporting details reinforce the main arguments presented throughout the text.",
-      "The information is organized logically, making it accessible to a wide audience.",
-      "Key terms and concepts are explained clearly for better reader comprehension.",
-      "Practical examples help illustrate the theoretical concepts discussed.",
-      "The author highlights important considerations that readers should keep in mind.",
-      "Relevant background information provides necessary context for deeper understanding.",
-    ];
-    html += `<li>${insights[i] || `Important point ${i + 1} extracted from the page content (${wordCount} total words analyzed).`}</li>`;
-  }
-  html += "</ul>";
-
-  return html;
-}
-
+// === GET API KEY ===
 async function getApiKey() {
-  const result = await chrome.storage.local.get([STORAGE_KEYS.API_KEY]);
+  var result = await chrome.storage.local.get([STORAGE_KEYS.API_KEY]);
   return result[STORAGE_KEYS.API_KEY] || null;
 }
 
+// === BUILD PROMPT ===
 function buildPrompt(content, settings) {
-  const lengthGuide = {
-    brief: "Provide exactly 3 bullet points.",
-    standard: "Provide exactly 5 bullet points.",
-    detailed: "Provide exactly 8 bullet points.",
+  var lengthGuide = {
+    brief: "exactly 3 bullet points",
+    standard: "exactly 5 bullet points",
+    detailed: "exactly 8 bullet points",
   };
 
-  const toneGuide = {
-    concise: "Be direct and to the point.",
-    detailed: "Include key details and context.",
-    simple: "Use simple, easy-to-understand language.",
+  var toneGuide = {
+    concise: "Be direct and to the point. Use short, clear sentences.",
+    detailed: "Include key details and supporting context in each point.",
+    simple:
+      "Use simple, easy-to-understand language suitable for a general audience.",
   };
 
-  return `You are a professional content summarizer. Analyze the following webpage content and provide a structured summary.
-
-CONTENT TO SUMMARIZE:
-"""
-${content}
-"""
-
-INSTRUCTIONS:
-1. ${lengthGuide[settings.summaryLength]}
-2. Each bullet point should be a complete, meaningful insight.
-3. Start with a "Key Insights" section (2-3 important takeaways).
-4. ${toneGuide[settings.tone]}
-5. Format the summary in clean HTML using <h3>, <ul>, and <li> tags.
-6. Do NOT include any introductory text like "Here is a summary".
-7. Do NOT wrap the response in markdown code blocks.
-
-Your response should be structured exactly like this:
-<h3>Key Insights</h3>
-<ul>
-<li>Important takeaway 1</li>
-<li>Important takeaway 2</li>
-</ul>
-<h3>Summary</h3>
-<ul>
-<li>Bullet point 1</li>
-<li>Bullet point 2</li>
-</ul>`;
+  return (
+    "You are a professional content summarizer. Your task is to summarize the following webpage content.\n\n" +
+    'CONTENT TO SUMMARIZE:\n"""\n' +
+    content.substring(0, 6000) +
+    '\n"""\n\n' +
+    "IMPORTANT INSTRUCTIONS - FOLLOW THESE EXACTLY:\n\n" +
+    '1. First, create a "Key Insights" section with 2-3 important takeaways from the content.\n' +
+    '2. Then, create a "Summary" section with ' +
+    lengthGuide[settings.summaryLength] +
+    ".\n" +
+    "3. " +
+    toneGuide[settings.tone] +
+    "\n" +
+    "4. Each bullet point must be a complete, meaningful sentence.\n" +
+    "5. You MUST include BOTH sections: Key Insights AND Summary.\n\n" +
+    "FORMAT YOUR ENTIRE RESPONSE EXACTLY LIKE THIS:\n" +
+    "<h3>Key Insights</h3>\n" +
+    "<ul>\n" +
+    "  <li>First key insight here</li>\n" +
+    "  <li>Second key insight here</li>\n" +
+    "  <li>Third key insight here</li>\n" +
+    "</ul>\n" +
+    "<h3>Summary</h3>\n" +
+    "<ul>\n" +
+    "  <li>Summary point 1</li>\n" +
+    "  <li>Summary point 2</li>\n" +
+    "  <li>Summary point 3</li>\n" +
+    "</ul>\n\n" +
+    "RULES:\n" +
+    "- Do NOT include any text before the first <h3> tag.\n" +
+    '- Do NOT say "Here is a summary" or similar introductions.\n' +
+    "- Do NOT wrap your response in markdown code blocks.\n" +
+    "- ONLY output the HTML tags and content shown in the format above."
+  );
 }
 
-async function callGeminiAPI(apiKey, content, settings) {
-  const prompt = buildPrompt(content, settings);
+// === CALL API ===
+async function callAPI(apiKey, content, settings) {
+  var prompt = buildPrompt(content, settings);
 
-  const requestBody = {
+  var requestBody = {
     contents: [
       {
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
+        parts: [{ text: prompt }],
       },
     ],
     generationConfig: {
       temperature: 0.3,
-      topK: 40,
-      topP: 0.95,
-      maxOutputTokens: 1024,
+      maxOutputTokens: 1500,
     },
   };
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+  var response = await fetch(API_URL + "?key=" + apiKey, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    var errorData = await response.json();
     throw new Error(
-      errorData.error?.message || `API error: ${response.status}`,
+      errorData.error?.message || "API error: " + response.status,
     );
   }
 
-  const data = await response.json();
+  var data = await response.json();
   return data.candidates[0].content.parts[0].text;
 }
 
-async function callOpenAIAPI(apiKey, content, settings) {
-  const prompt = buildPrompt(content, settings);
-
-  const requestBody = {
-    model: "gpt-3.5-turbo",
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a professional content summarizer. Always respond with clean HTML.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    temperature: 0.3,
-    max_tokens: 1024,
-  };
-
-  const response = await fetch(OPENAI_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.error?.message || `API error: ${response.status}`,
-    );
-  }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
-
+// === MAIN HANDLER ===
 async function handleSummarization(tabId) {
-  // Get API key (skip check if in test mode)
-  const apiKey = await getApiKey();
+  var apiKey = await getApiKey();
 
-  if (!apiKey && !TEST_MODE) {
+  if (!apiKey) {
     return {
       error:
-        "No API key configured. Please add your API key in the extension settings.",
+        "No API key configured. Please add your Gemini API key in Settings.",
     };
   }
 
-  const settingsResult = await chrome.storage.local.get([
-    STORAGE_KEYS.SETTINGS,
-  ]);
-  const settings = settingsResult[STORAGE_KEYS.SETTINGS] || DEFAULT_SETTINGS;
+  var settingsResult = await chrome.storage.local.get([STORAGE_KEYS.SETTINGS]);
+  var settings = settingsResult[STORAGE_KEYS.SETTINGS] || DEFAULT_SETTINGS;
 
-  let pageData;
+  var pageData;
   try {
-    const response = await chrome.tabs.sendMessage(tabId, {
+    var response = await chrome.tabs.sendMessage(tabId, {
       action: "extractContent",
     });
     if (!response || !response.success) {
-      return { error: "Failed to extract content from this page." };
+      return {
+        error:
+          "Failed to extract content from this page. Try a different page.",
+      };
     }
     pageData = response.data;
   } catch (error) {
@@ -221,46 +135,30 @@ async function handleSummarization(tabId) {
   }
 
   if (!pageData.content || pageData.content.length < 100) {
-    return {
-      error: "Not enough content found on this page to summarize.",
-    };
+    return { error: "Not enough content found on this page to summarize." };
   }
 
   try {
-    let summary;
-
-    // Use test mode if enabled or if API key is a test key
-    if (TEST_MODE) {
-      summary = generateMockSummary(pageData.content, settings);
-    } else if (AI_PROVIDER === "gemini") {
-      summary = await callGeminiAPI(apiKey, pageData.content, settings);
-    } else {
-      summary = await callOpenAIAPI(apiKey, pageData.content, settings);
-    }
-
+    var summary = await callAPI(apiKey, pageData.content, settings);
     return {
       summary: summary,
       readingTime: pageData.readingTime,
     };
   } catch (error) {
-    return {
-      error: `AI API error: ${error.message}`,
-    };
+    return { error: "AI API error: " + error.message };
   }
 }
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// === MESSAGE LISTENER ===
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.action === "summarize") {
     handleSummarization(message.tabId)
-      .then((result) => {
+      .then(function (result) {
         sendResponse(result);
       })
-      .catch((error) => {
-        sendResponse({
-          error: `Unexpected error: ${error.message}`,
-        });
+      .catch(function (error) {
+        sendResponse({ error: "Unexpected error: " + error.message });
       });
-
     return true;
   }
 });
