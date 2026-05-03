@@ -164,7 +164,7 @@ The AI prompt uses a structured template:
 - **Role assignment:** "You are a professional content summarizer"
 - **Clear input delimitation:** Content is wrapped in `"""` markers
 - **Numbered, specific instructions:** Controls output format and behavior
-- **Output format specification:** Requires HTML with <h3>, <ul>, <li> tags
+- **Output format specification:** Requires HTML with `<h3>`, `<ul>`, `<li>` tags
 - **Negative constraints:** Explicitly forbids introductory text and markdown blocks
 - **Temperature setting:** 0.3 for factual, consistent outputs
 
