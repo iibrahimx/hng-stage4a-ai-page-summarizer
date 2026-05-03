@@ -9,8 +9,7 @@
 
 body {
   width: 400px;
-  min-height: 300px;
-  max-height: 600px;
+  height: 500px;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
     sans-serif;
@@ -18,7 +17,7 @@ body {
   line-height: 1.5;
   color: #1f2937;
   background-color: #0f172a;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 /* Container */
@@ -27,6 +26,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 /* Header */
@@ -149,7 +150,7 @@ body {
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 /* Reading Time */
@@ -263,4 +264,151 @@ body {
   color: #64748b;
   font-style: italic;
   font-size: 13px;
+}
+
+/* SETTINGS TOGGLE */
+.settings-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+}
+
+.settings-toggle:hover {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.toggle-icon {
+  transition: transform 0.2s ease;
+  font-size: 10px;
+}
+
+.settings-toggle[aria-expanded="true"] .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* SETTINGS PANEL */
+.settings-panel {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.setting-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.setting-input,
+.setting-select {
+  width: 100%;
+  padding: 8px 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #f1f5f9;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.setting-input:focus,
+.setting-select:focus {
+  border-color: #818cf8;
+}
+
+.setting-input::placeholder {
+  color: #64748b;
+}
+
+.api-key-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.api-key-wrapper .setting-input {
+  padding-right: 40px;
+}
+
+.toggle-visibility {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px 8px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.toggle-visibility:hover {
+  opacity: 1;
+}
+
+.setting-help {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.setting-help a {
+  color: #818cf8;
+  text-decoration: none;
+}
+
+.setting-help a:hover {
+  text-decoration: underline;
+}
+
+.setting-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.settings-message {
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.settings-message.success {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.settings-message.error {
+  background: rgba(252, 165, 165, 0.1);
+  color: #fca5a5;
+  border: 1px solid rgba(252, 165, 165, 0.2);
 }

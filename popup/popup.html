@@ -27,6 +27,82 @@
           <button id="clearBtn" class="btn btn-secondary">Clear</button>
         </div>
 
+        <!-- Settings Toggle -->
+        <button
+          id="settingsToggle"
+          class="settings-toggle"
+          aria-expanded="false"
+        >
+          <span>⚙️ Settings</span>
+          <span id="toggleIcon" class="toggle-icon">▼</span>
+        </button>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="settings-panel hidden">
+          <div class="setting-group">
+            <label for="apiKeyInput" class="setting-label"
+              >Gemini API Key</label
+            >
+            <div class="api-key-wrapper">
+              <input
+                type="password"
+                id="apiKeyInput"
+                class="setting-input"
+                placeholder="Enter your Gemini API key"
+                autocomplete="off"
+              />
+              <button
+                id="toggleVisibilityBtn"
+                class="toggle-visibility"
+                type="button"
+                title="Show/hide API key"
+              >
+                👁️
+              </button>
+            </div>
+            <p class="setting-help">
+              Get a free key at
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google AI Studio</a
+              >
+            </p>
+          </div>
+
+          <div class="setting-group">
+            <label for="summaryLength" class="setting-label"
+              >Summary Length</label
+            >
+            <select id="summaryLength" class="setting-select">
+              <option value="brief">Brief (3 points)</option>
+              <option value="standard" selected>Standard (5 points)</option>
+              <option value="detailed">Detailed (8 points)</option>
+            </select>
+          </div>
+
+          <div class="setting-group">
+            <label for="summaryTone" class="setting-label">Tone</label>
+            <select id="summaryTone" class="setting-select">
+              <option value="concise" selected>Concise</option>
+              <option value="detailed">Detailed</option>
+              <option value="simple">Simple</option>
+            </select>
+          </div>
+
+          <div class="setting-actions">
+            <button id="saveSettingsBtn" class="btn btn-primary btn-small">
+              Save Settings
+            </button>
+            <button id="clearCacheBtn" class="btn btn-secondary btn-small">
+              Clear Cache
+            </button>
+          </div>
+
+          <div id="settingsMessage" class="settings-message hidden"></div>
+        </div>
+
         <div
           id="readingTime"
           class="reading-time hidden"
