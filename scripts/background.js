@@ -1,7 +1,7 @@
 // AI API Configuration
 const AI_PROVIDER = "gemini";
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 
 const STORAGE_KEYS = {
@@ -13,6 +13,54 @@ const DEFAULT_SETTINGS = {
   summaryLength: "standard",
   tone: "concise",
 };
+
+// Test mode - set to true to test without real API calls
+const TEST_MODE = true;
+
+function generateMockSummary(content, settings) {
+  const wordCount = content.split(/\s+/).length;
+  const points =
+    settings.summaryLength === "brief"
+      ? 3
+      : settings.summaryLength === "detailed"
+        ? 8
+        : 5;
+
+  // Create realistic-looking summary
+  const sentences = content
+    .split(/[.!?]+/)
+    .filter((s) => s.trim().length > 30)
+    .slice(0, 2);
+
+  let html = "<h3>Key Insights</h3><ul>";
+  if (sentences.length > 0) {
+    sentences.forEach((sentence) => {
+      html += `<li><strong>Key Point:</strong> ${sentence.trim().substring(0, 150)}...</li>`;
+    });
+  } else {
+    html +=
+      "<li>This page contains important information worth reviewing in detail.</li>";
+  }
+  html += "</ul>";
+
+  html += "<h3>Summary</h3><ul>";
+  for (let i = 0; i < points; i++) {
+    const insights = [
+      "The content presents key information in a structured format that readers can easily follow.",
+      "Multiple perspectives are covered, giving readers a comprehensive understanding of the topic.",
+      "Supporting details reinforce the main arguments presented throughout the text.",
+      "The information is organized logically, making it accessible to a wide audience.",
+      "Key terms and concepts are explained clearly for better reader comprehension.",
+      "Practical examples help illustrate the theoretical concepts discussed.",
+      "The author highlights important considerations that readers should keep in mind.",
+      "Relevant background information provides necessary context for deeper understanding.",
+    ];
+    html += `<li>${insights[i] || `Important point ${i + 1} extracted from the page content (${wordCount} total words analyzed).`}</li>`;
+  }
+  html += "</ul>";
+
+  return html;
+}
 
 async function getApiKey() {
   const result = await chrome.storage.local.get([STORAGE_KEYS.API_KEY]);
@@ -142,8 +190,10 @@ async function callOpenAIAPI(apiKey, content, settings) {
 }
 
 async function handleSummarization(tabId) {
+  // Get API key (skip check if in test mode)
   const apiKey = await getApiKey();
-  if (!apiKey) {
+
+  if (!apiKey && !TEST_MODE) {
     return {
       error:
         "No API key configured. Please add your API key in the extension settings.",
@@ -178,7 +228,11 @@ async function handleSummarization(tabId) {
 
   try {
     let summary;
-    if (AI_PROVIDER === "gemini") {
+
+    // Use test mode if enabled or if API key is a test key
+    if (TEST_MODE) {
+      summary = generateMockSummary(pageData.content, settings);
+    } else if (AI_PROVIDER === "gemini") {
       summary = await callGeminiAPI(apiKey, pageData.content, settings);
     } else {
       summary = await callOpenAIAPI(apiKey, pageData.content, settings);

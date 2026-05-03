@@ -108,5 +108,107 @@ clearBtn.addEventListener("click", () => {
   clearSummary();
 });
 
+// Settings functionality
+const settingsToggle = document.getElementById("settingsToggle");
+const settingsPanel = document.getElementById("settingsPanel");
+const toggleIcon = document.getElementById("toggleIcon");
+const apiKeyInput = document.getElementById("apiKeyInput");
+const toggleVisibilityBtn = document.getElementById("toggleVisibilityBtn");
+const summaryLength = document.getElementById("summaryLength");
+const summaryTone = document.getElementById("summaryTone");
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+const clearCacheBtn = document.getElementById("clearCacheBtn");
+const settingsMessage = document.getElementById("settingsMessage");
+
+// Toggle settings panel
+settingsToggle.addEventListener("click", () => {
+  const isExpanded = settingsToggle.getAttribute("aria-expanded") === "true";
+
+  if (isExpanded) {
+    // Close panel
+    settingsToggle.setAttribute("aria-expanded", "false");
+    settingsPanel.classList.add("hidden");
+  } else {
+    // Open panel
+    settingsToggle.setAttribute("aria-expanded", "true");
+    settingsPanel.classList.remove("hidden");
+  }
+});
+
+// Toggle API key visibility
+toggleVisibilityBtn.addEventListener("click", () => {
+  const type = apiKeyInput.type === "password" ? "text" : "password";
+  apiKeyInput.type = type;
+  toggleVisibilityBtn.textContent = type === "password" ? "👁️" : "🙈";
+});
+
+// Load saved settings
+async function loadSettings() {
+  const result = await chrome.storage.local.get(["api_key", "user_settings"]);
+
+  if (result.api_key) {
+    apiKeyInput.value = result.api_key;
+  }
+
+  if (result.user_settings) {
+    summaryLength.value = result.user_settings.summaryLength || "standard";
+    summaryTone.value = result.user_settings.tone || "concise";
+  }
+}
+
+// Save settings
+saveSettingsBtn.addEventListener("click", async () => {
+  const apiKey = apiKeyInput.value.trim();
+
+  if (!apiKey) {
+    showSettingsMessage("Please enter an API key", "error");
+    return;
+  }
+
+  try {
+    await chrome.storage.local.set({
+      api_key: apiKey,
+      user_settings: {
+        summaryLength: summaryLength.value,
+        tone: summaryTone.value,
+      },
+    });
+    showSettingsMessage("Settings saved successfully!", "success");
+  } catch (error) {
+    showSettingsMessage("Failed to save settings", "error");
+  }
+});
+
+// Clear cache
+clearCacheBtn.addEventListener("click", async () => {
+  try {
+    await chrome.storage.local.clear();
+    // Re-save settings after clearing
+    await chrome.storage.local.set({
+      api_key: apiKeyInput.value.trim(),
+      user_settings: {
+        summaryLength: summaryLength.value,
+        tone: summaryTone.value,
+      },
+    });
+    showSettingsMessage("Cache cleared successfully!", "success");
+  } catch (error) {
+    showSettingsMessage("Failed to clear cache", "error");
+  }
+});
+
+function showSettingsMessage(text, type) {
+  settingsMessage.textContent = text;
+  settingsMessage.className = `settings-message ${type}`;
+  settingsMessage.classList.remove("hidden");
+
+  setTimeout(() => {
+    settingsMessage.classList.add("hidden");
+  }, 3000);
+}
+
+// Load settings on popup open
+loadSettings();
+
 // Run when popup loads
 displayPageTitle();
