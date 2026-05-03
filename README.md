@@ -1,4 +1,4 @@
-# AI Page Summarizer - Chrome Extension (HNG Stage 4A)
+# HNG Stage 4A AI Page Summarizer - Chrome Extension
 
 A Chrome Extension that extracts content from any webpage and generates a structured AI-powered summary with key insights and estimated reading time.
 
@@ -145,7 +145,7 @@ hng-stage4-ai-page-summarizer/
 
 ## AI Integration
 
-This extension uses the **Google Gemini API** (`gemini-2.0-flash` model) for text summarization.
+This extension uses the **Google Gemini API** (`gemini-3-flash-preview` model) for text summarization.
 
 ### How It Works
 
@@ -224,11 +224,11 @@ This extension uses chrome.storage.local for all data persistence.
 | :-------------------------- | :---------------------------- | :---------------------------------------------------------- |
 | Content extraction approach | Combined semantic + heuristic | Works on most sites but may miss content on unusual layouts |
 | API provider                | Gemini (free tier)            | No cost but has rate limits; users can use their own key    |
-| Summary length limit        | 8000 characters max input     | Handles most articles but very long pages are truncated     |
+| Summary length limit        | 6000 characters max input     | Handles most articles but very long pages are truncated     |
 | No framework                | Vanilla JavaScript            | Lightweight and fast but more verbose code                  |
 | Popup-only UI               | No options page               | Simpler architecture but all settings in popup              |
 
---
+---
 
 ## Technical Details
 
