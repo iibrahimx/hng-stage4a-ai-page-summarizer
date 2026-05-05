@@ -1,6 +1,6 @@
 # HNG Stage 4A AI Page Summarizer - Chrome Extension
 
-A Chrome Extension that extracts content from any webpage and generates a structured AI-powered summary with key insights and estimated reading time.
+A Chrome Extension that extracts content from any webpage and generates a structured AI-powered summary with key insights and estimated reading time. Works out of the box, no API keys or configuration required.
 
 ---
 
@@ -13,13 +13,13 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 ## Features
 
 - **One-click Summarization**: Extract and summarize any article with a single click
-- **AI-Powered**: Uses Google Gemini API for intelligent content summarization
+- **Plug-and-Play**: No API keys needed - works immediately after installation
+- **AI-Powered**: Uses Groq's Llama 3.1 model via a secure proxy server
 - **Smart Content Extraction**: Identifies main article content, ignoring navigation and sidebars
 - **Key Insights**: Highlights the most important takeaways
 - **Reading Time**: Estimates how long the article takes to read
 - **Summary Caching**: Caches summaries per URL to prevent duplicate API calls
-- **Customizable**: Configure summary length (Brief/Standard/Detailed) and tone
-- **Secure**: API keys stored locally, never exposed or transmitted
+- **Customizable**: Configure summary length (Brief/Standard/Detailed) and tone (Concise/Detailed/Simple)
 - **Keyboard Accessible**: Full keyboard navigation with visible focus states
 
 ---
@@ -30,6 +30,7 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 - **HTML/CSS**
 - **Chrome Extensions API** (Manifest V3)
 - **Google Gemini API** (AI summarization)
+- **Vercel Serverless Functions** (secure API proxy)
 - **chrome.storage.local** (caching and settings persistence)
 
 ---
@@ -39,7 +40,6 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 ### Prerequisites
 
 - Google Chrome browser
-- A Google Gemini API key (free - get one at [Google AI Studio](https://aistudio.google.com/app/apikey))
 
 ### Setup Instructions
 
@@ -69,11 +69,9 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 - Find "AI Page Summarizer" and click the pin icon
 - The extension icon will now appear directly in your toolbar
 
-5. **Configure your API key**
+5. **Configure the summarizer (optional)**
 
 - Click the extension icon in the toolbar
-- Click ⚙️ **Settings** to expand the settings panel
-- Paste your Gemini API key
 - Select your preferred summary length and tone
 - Click **Save Settings**
 
@@ -89,16 +87,19 @@ A Chrome Extension that extracts content from any webpage and generates a struct
 
 ```text
 hng-stage4a-ai-page-summarizer/
-├── manifest.json          # Extension configuration (Manifest V3)
+├── api/
+│   └── summarize.js       # Serverless proxy function (holds API key securely)
 ├── popup/
 │   ├── popup.html         # Popup UI structure
 │   ├── popup.css          # Popup styling
-│   └── popup.js           # Popup logic & state management, settings
+│   └── popup.js           # Popup logic & state management
 ├── scripts/
 │   ├── content.js         # Page content extraction engine
-│   └── background.js      # Service worker & API integration, caching
+│   └── background.js      # Service worker & proxy communication
 ├── assets/
 │   └── icons/             # Extension icons (16px, 48px, 128px)
+├── manifest.json          # Extension configuration (Manifest V3)
+├── vercel.json            # Vercel deployment configuration
 └── README.md
 ```
 
@@ -109,26 +110,27 @@ hng-stage4a-ai-page-summarizer/
 ### Component Communication
 
 ```text
-┌─────────┐    chrome.runtime.sendMessage    ┌────────────┐
-│  Popup  │ ──────────────────────────────>  │ Background │
-│  (UI)   │ <──────────────────────────────  │  (Service  │
-└─────────┘    sendResponse                  │   Worker)  │
-                                             └─────┬──────┘
-                                                   │
-                                    chrome.tabs    │
-                                    .sendMessage   │
-                                                   │
-                                             ┌─────┴──────┐
-                                             │  Content   │
-                                             │  Script    │
+┌─────────┐    chrome.runtime.sendMessage    ┌────────────┐    HTTPS    ┌─────────┐
+│  Popup  │ ──────────────────────────────>  │ Background │ ─────────>  │ Vercel  │
+│  (UI)   │ <──────────────────────────────  │  (Service  │ <─────────  │  Proxy  │
+└─────────┘    sendResponse                  │   Worker)  │             └────┬────┘
+                                             └─────┬──────┘                  │
+                                                   │                         │
+                                      chrome.tabs  │                 Groq API│
+                                     .sendMessage  │                         │
+                                                   │                  ┌──────┴──────┐
+                                             ┌─────┴──────┐           │  Groq Cloud │
+                                             │  Content   │           │  (Llama 3)  │
+                                             │  Script    │           └─────────────┘
                                              └────────────┘
 ```
 
 1. **Popup** sends a summarize request to the Background Service Worker
 2. **Background** requests page content from the Content Script
 3. **Content Script** extracts the main article text and returns it
-4. **Background** calls the Gemini API (or returns cached/mock result)
-5. **Popup** displays the formatted summary
+4. **Background** sends content to the **Vercel Proxy Server**
+5. **Vercel Proxy** calls the **Groq API** using the server-side API key
+6. **Popup** displays the formatted summary
 
 ### Key Design Decisions
 
@@ -136,24 +138,34 @@ hng-stage4a-ai-page-summarizer/
 | :----------------------------------------- | :----------------------------------------------------------- |
 | **Manifest V3**                            | Required by Chrome; V2 is deprecated                         |
 | **Background Service Worker**              | Isolated environment for secure API calls                    |
+| **Serverless Proxy (Vercel)**              | API key stored on server, never exposed to client or GitHub  |
 | **Content Script (declarative injection)** | Automatically runs on all pages without scripting permission |
 | **`chrome.storage.local` for caching**     | Persists summaries per URL across sessions                   |
-| **Settings in popup (no options page)**    | Simpler UX; all functionality in one place                   |
-| **Vanilla JavaScript**                     | No framework overhead; fast loading                          |
+| **Settings in popup**                      | Simpler UX; all functionality in one place                   |
+| **Vanilla JavaScript**                     | Zero dependencies; fast loading; no framework overhead       |
 
 ---
 
 ## AI Integration
 
-This extension uses the **Google Gemini API** (`gemini-3-flash-preview` model) for text summarization.
+This extension uses **Groq's Llama 3.1 8B Instant** model via a secure Vercel serverless proxy.
 
 ### How It Works
 
 1. Content is extracted from the webpage using semantic HTML detection and heuristic filtering
-2. A structured prompt is built with user preferences (summary length, tone)
-3. The prompt and content are sent to the Gemini API via HTTPS
-4. The AI returns a formatted HTML summary with Key Insights and bullet points
-5. The summary is displayed and cached for future visits
+2. A structured prompt is built incorporating user preferences (summary length, tone)
+3. The content and settings are sent to the Vercel proxy server
+4. The proxy forwards the request to Groq API with the server-side API key
+5. The AI returns a formatted HTML summary with Key Insights and bullet points
+6. The summary is displayed and cached for future visits
+
+---
+
+## Why a Proxy Server?
+
+- Security: The API key lives only on Vercel's servers, never in extension code or on GitHub
+- User Experience: No API key setup required - works immediately after installation
+- Reliability: Groq's free tier has generous rate limits for smooth operation
 
 ---
 
@@ -177,7 +189,7 @@ The extension uses a tiered approach to find the main article content:
 1. **Semantic HTML detection:** Searches for `<article>`, `[role="main"]`, and common content class names (`.post-content`, `.article-content`, `.entry-content`)
 2. **Heuristic fallback:** If no semantic elements are found, clones the body, removes non-content elements (nav, footer, sidebar, ads), and scores remaining elements by text density
 3. **Body fallback:** If all else fails, extracts from the full body after cleaning
-4. **Non-content elements removed include:** navigation, headers, footers, sidebars, advertisements, social sharing buttons, comments, scripts, and styles.
+4. **Filtered elements include:** navigation, headers, footers, sidebars, advertisements, social sharing buttons, comments, scripts, and styles.
 
 ---
 
@@ -187,20 +199,14 @@ This extension uses chrome.storage.local for all data persistence.
 
 ### Storage Keys
 
-| Key               | Purpose               | Data Stored                                   |
-| :---------------- | :-------------------- | :-------------------------------------------- |
-| **api_key**       | User's Gemini API key | String (encrypted at rest by Chrome)          |
-| **user_settings** | User preferences      | Object: `{ summaryLength, tone }`             |
-| **[page_url]**    | Cached summaries      | Object: `{ summary, readingTime, timestamp }` |
+| Key               | Purpose          | Data Stored                                   |
+| :---------------- | :--------------- | :-------------------------------------------- |
+| **user_settings** | User preferences | Object: `{ summaryLength, tone }`             |
+| **[page_url]**    | Cached summaries | Object: `{ summary, readingTime, timestamp }` |
 
----
-
-## How It Works
-
-- **API Key:** Entered via settings panel, stored on save, loaded on popup open
 - **Settings:** Persist across browser restarts, loaded on each popup open
-- **Caching:** Each unique URL gets its own storage key. When a user revisits a previously summarized page, the cached summary is displayed instantly without making a new API call
-- **Cache Clearing:** The "Clear Cache" button removes all cached summaries while preserving settings and API key
+- **Caching:** Each unique URL gets its own storage key for instant retrieval on revisit
+- **Cache Clearing:** The "Clear Cache" button removes all cached summaries while preserving settings
 
 ---
 
@@ -208,10 +214,10 @@ This extension uses chrome.storage.local for all data persistence.
 
 | Decision                                      | Reasoning                                                    |
 | :-------------------------------------------- | :----------------------------------------------------------- |
-| API key stored in `chrome.storage.local`      | Never exposed to web pages, only accessible by extension     |
+| API key stored on Vercel server only          | Never in extension code, never on GitHub, never in browser   |
+| Proxy server architecture                     | Client never sees or handles API keys                        |
 | API calls from Background Service Worker      | Isolated environment, not accessible to content scripts      |
 | Minimal permissions (`activeTab`, `storage`)  | Only access current tab on user action, no broad permissions |
-| `type="password"` for API key input           | Prevents visual exposure of the key                          |
 | `.gitignore` for environment files            | Prevents accidental secret commits                           |
 | No external dependencies                      | Reduces supply chain attack surface                          |
 | `rel="noopener noreferrer"` on external links | Prevents tab hijacking                                       |
@@ -223,7 +229,7 @@ This extension uses chrome.storage.local for all data persistence.
 | Trade-off                   | Choice                        | Impact                                                      |
 | :-------------------------- | :---------------------------- | :---------------------------------------------------------- |
 | Content extraction approach | Combined semantic + heuristic | Works on most sites but may miss content on unusual layouts |
-| API provider                | Gemini (free tier)            | No cost but has rate limits; users can use their own key    |
+| API architecture            | Serverless proxy (Vercel)     | Adds network hop but keeps API key secure                   |
 | Summary length limit        | 6000 characters max input     | Handles most articles but very long pages are truncated     |
 | No framework                | Vanilla JavaScript            | Lightweight and fast but more verbose code                  |
 | Popup-only UI               | No options page               | Simpler architecture but all settings in popup              |
@@ -234,7 +240,8 @@ This extension uses chrome.storage.local for all data persistence.
 
 - Manifest Version: V3
 - Browser Support: Chrome 88+
-- API: Google Gemini (https://generativelanguage.googleapis.com)
+- API Model: Groq Llama 3.1 8B Instant
+- Proxy: Vercel Serverless Functions
 - Storage: chrome.storage.local for caching and settings
 - Content Extraction: Semantic HTML detection with heuristic fallback
 - Reading Speed: 225 words per minute (industry standard)
