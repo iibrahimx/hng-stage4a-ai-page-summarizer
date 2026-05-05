@@ -1,6 +1,7 @@
 // === CONFIGURATION ===
 // Actual Vercel URL after deployment
-const PROXY_URL = "https://YOUR_VERCEL_APP.vercel.app/api/summarize";
+const PROXY_URL =
+  "https://hng-stage4a-ai-page-summarizer-alpha.vercel.app/api/summarize";
 
 const STORAGE_KEYS = {
   SETTINGS: "user_settings",
