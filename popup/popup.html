@@ -39,69 +39,9 @@
 
         <!-- Settings Panel -->
         <div id="settingsPanel" class="settings-panel hidden">
-          <div class="setting-group">
-            <label for="apiKeyInput" class="setting-label"
-              >Gemini API Key</label
-            >
-            <div class="api-key-wrapper">
-              <input
-                type="password"
-                id="apiKeyInput"
-                class="setting-input"
-                placeholder="Enter your Gemini API key"
-                autocomplete="off"
-              />
-              <button
-                id="toggleVisibilityBtn"
-                class="toggle-visibility"
-                type="button"
-                title="Show/hide API key"
-              >
-                👁️
-              </button>
-            </div>
-            <p class="setting-help">
-              Get a free key at
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Google AI Studio</a
-              >
-            </p>
-          </div>
-
-          <div class="setting-group">
-            <label for="groqApiKeyInput" class="setting-label"
-              >Groq API Key (Fallback)</label
-            >
-            <div class="api-key-wrapper">
-              <input
-                type="password"
-                id="groqApiKeyInput"
-                class="setting-input"
-                placeholder="Enter your Groq API key (optional)"
-                autocomplete="off"
-              />
-              <button
-                id="toggleGroqVisibilityBtn"
-                class="toggle-visibility"
-                type="button"
-                title="Show/hide API key"
-              >
-                👁️
-              </button>
-            </div>
-            <p class="setting-help">
-              Get a free key at
-              <a
-                href="https://console.groq.com/keys"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Groq Console</a
-              >
-            </p>
-          </div>
+          <p class="setting-info">
+            This extension works out of the box - no API key needed.
+          </p>
 
           <div class="setting-group">
             <label for="summaryLength" class="setting-label"

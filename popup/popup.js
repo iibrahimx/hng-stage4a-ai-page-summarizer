@@ -112,63 +112,27 @@ clearBtn.addEventListener("click", () => {
 const settingsToggle = document.getElementById("settingsToggle");
 const settingsPanel = document.getElementById("settingsPanel");
 const toggleIcon = document.getElementById("toggleIcon");
-const apiKeyInput = document.getElementById("apiKeyInput");
-const toggleVisibilityBtn = document.getElementById("toggleVisibilityBtn");
 const summaryLength = document.getElementById("summaryLength");
 const summaryTone = document.getElementById("summaryTone");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const clearCacheBtn = document.getElementById("clearCacheBtn");
 const settingsMessage = document.getElementById("settingsMessage");
 
-const groqApiKeyInput = document.getElementById("groqApiKeyInput");
-const toggleGroqVisibilityBtn = document.getElementById(
-  "toggleGroqVisibilityBtn",
-);
-
 // Toggle settings panel
 settingsToggle.addEventListener("click", () => {
   const isExpanded = settingsToggle.getAttribute("aria-expanded") === "true";
-
   if (isExpanded) {
-    // Close panel
     settingsToggle.setAttribute("aria-expanded", "false");
     settingsPanel.classList.add("hidden");
   } else {
-    // Open panel
     settingsToggle.setAttribute("aria-expanded", "true");
     settingsPanel.classList.remove("hidden");
   }
 });
 
-// Toggle API key visibility
-toggleVisibilityBtn.addEventListener("click", () => {
-  const type = apiKeyInput.type === "password" ? "text" : "password";
-  apiKeyInput.type = type;
-  toggleVisibilityBtn.textContent = type === "password" ? "👁️" : "🙈";
-});
-
-toggleGroqVisibilityBtn.addEventListener("click", () => {
-  const type = groqApiKeyInput.type === "password" ? "text" : "password";
-  groqApiKeyInput.type = type;
-  toggleGroqVisibilityBtn.textContent = type === "password" ? "👁️" : "🙈";
-});
-
 // Load saved settings
 async function loadSettings() {
-  var result = await chrome.storage.local.get([
-    "api_key",
-    "groq_api_key",
-    "user_settings",
-  ]);
-
-  if (result.api_key) {
-    apiKeyInput.value = result.api_key;
-  }
-
-  if (result.groq_api_key) {
-    groqApiKeyInput.value = result.groq_api_key;
-  }
-
+  var result = await chrome.storage.local.get(["user_settings"]);
   if (result.user_settings) {
     summaryLength.value = result.user_settings.summaryLength || "standard";
     summaryTone.value = result.user_settings.tone || "concise";
@@ -177,21 +141,8 @@ async function loadSettings() {
 
 // Save settings
 saveSettingsBtn.addEventListener("click", async () => {
-  var apiKey = apiKeyInput.value.trim();
-  var groqKey = groqApiKeyInput.value.trim();
-
-  if (!apiKey && !groqKey) {
-    showSettingsMessage(
-      "Please enter at least one API key (Gemini or Groq)",
-      "error",
-    );
-    return;
-  }
-
   try {
     await chrome.storage.local.set({
-      api_key: apiKey,
-      groq_api_key: groqKey,
       user_settings: {
         summaryLength: summaryLength.value,
         tone: summaryTone.value,
@@ -208,8 +159,6 @@ clearCacheBtn.addEventListener("click", async () => {
   try {
     await chrome.storage.local.clear();
     await chrome.storage.local.set({
-      api_key: apiKeyInput.value.trim(),
-      groq_api_key: groqApiKeyInput.value.trim(),
       user_settings: {
         summaryLength: summaryLength.value,
         tone: summaryTone.value,
@@ -223,16 +172,12 @@ clearCacheBtn.addEventListener("click", async () => {
 
 function showSettingsMessage(text, type) {
   settingsMessage.textContent = text;
-  settingsMessage.className = `settings-message ${type}`;
+  settingsMessage.className = "settings-message " + type;
   settingsMessage.classList.remove("hidden");
-
-  setTimeout(() => {
+  setTimeout(function () {
     settingsMessage.classList.add("hidden");
   }, 3000);
 }
 
-// Load settings on popup open
 loadSettings();
-
-// Run when popup loads
 displayPageTitle();
